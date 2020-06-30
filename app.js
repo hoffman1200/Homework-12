@@ -22,8 +22,8 @@ var connection = mysql.createConnection({
   connection.connect(function(err) {
     if (err) throw err;
     start();
-    getRoles();
     getDepartments();
+    getRoles();
     getManagers();
   });
 
@@ -93,6 +93,7 @@ addSomething = () => {
     }
     else if (answer.add === "EMPLOYEE") {
       console.log("Add a new: " + answer.add);
+      addEmployee();
     } else {
       connection.end();
     }
@@ -159,36 +160,132 @@ addRole = () => {
   })
 };
 
-function addEmployee() {
+
+addEmployee = () => {
+  let roleOptions = [];
+  for (i = 0; i < roles.length; i++) {
+    roleOptions.push(Object(roles[i]));
+    // console.log(roleOptions[i].title);
+  };
+  let managerOptions = [];
+  for (i = 0; i < managers.length; i++) {
+    managerOptions.push(Object(managers[i]));
+    console.log(managerOptions[i].managers);
+  }
+  // console.log(departmentOptions[1].name);
+  // console.log(departmentOptions[1].id);
+  // console.log(roleOptions)
   inquirer.prompt([
     {
-      name: "firstName",
+      name: "first_name",
       type: "input",
-      message: "What is the employee first name?"
+      message: "What is the employee's first name?"
     },
     {
-      name: "lastName",
+      name: "last_name",
       type: "input",
-      message: "What is the employee last name?"
+      message: "What is the employee's last name?"
     },
     {
       name: "role_id",
-      type: "input",
-      message: "What is the role ID of the employee?"
+      type: "list",
+      message: "What is the department for this possition?",
+      choices: function() {
+        var choiceArray = [];
+        for (var i = 0; i < roleOptions.length; i++) {
+          choiceArray.push(roleOptions[i].title)
+        }
+        return choiceArray;
+      }
     },
     {
       name: "manager_id",
-      type: "input",
-      message: "What is the role ID of the employee?"
+      type: "list",
+      message: "Who is the employee's manager?",
+      choices: function() {
+        var choiceArray = [];
+        for (var i = 0; i < managerOptions.length; i++) {
+          choiceArray.push(managerOptions[i].managers)
+        }
+        return choiceArray;
+      }
+    }
+  ]).then(function(answer) {
+    // console.log(answer.role_id);
+    // console.log(roleOptions);
+    for (i = 0; i < roleOptions.length; i++) {
+      // console.log(departmentOptions[i].id);
+      if (roleOptions[i].title === answer.role_id) {
+        console.log(roleOptions[i].id)
+        role_id = roleOptions[i].id
+        console.log(role_id);
+      }
     }
 
-  ]).then(function(answer) {
-    connection.query(`INSERT INTO role (title, salary, department_id) VALUES ('${answer.title}', '${answer.salary}', '${answer.department_id}')`, function(err, res) {
+    for (i = 0; i < managerOptions.length; i++) {
+      if (managerOptions[i].managers === answer.manager_id) {
+        manager_id = managerOptions[i].id
+      }
+    }
+
+
+    connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('${answer.first_name}', '${answer.last_name}', ${role_id}, ${manager_id})`, function(err, res) {
       if (err) throw err;
-      console.log("1 new role added: " + answer.title);
+
+      console.log("1 new employee added: " + answer.first_name + " " + answer.last_name);
     }) 
   })
 };
+
+// function addEmployee() {
+//   // console.log(roleOptions[1].title);
+//   // console.log(roleOptions[1].id);
+//   inquirer.prompt([
+//     {
+//       name: "firstName",
+//       type: "input",
+//       message: "What is the employee first name?"
+//     },
+//     {
+//       name: "lastName",
+//       type: "input",
+//       message: "What is the employee last name?"
+//     },
+//     {
+//       name: "role_id",
+//       type: "list",
+//       message: "What is the role of the employee?",
+//       choices: function() {
+//         var roleOptions = [];
+//         for (i = 0; i < roles.length; i++) {
+//           roleOptions.push(roles[i]);
+//           // console.log(roles[i]);
+//         }
+        
+//         return roleOptions;
+//       }
+//     },
+//     {
+//       name: "manager_id",
+//       type: "input",
+//       message: "Who is the manager of the employee?"
+//     }
+
+//   ]).then(function(answer) {
+//     // for (i = 0; i < roleOptions.length; i++) {
+//     //   // console.log(departmentOptions[i].id);
+//     //   if (roleOptions[i].name === answer.role_id) {
+//     //     // console.log(departmentOptions[i].id)
+//     //     role_id = roleOptions[i].id
+//     //   }
+//     // }
+
+//     connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('${answer.title}', '${answer.salary}', '${answer.department_id}')`, function(err, res) {
+//       if (err) throw err;
+//       console.log("1 new role added: " + answer.title);
+//     }) 
+//   })
+// };
 
 // function afterConnection() {
 //   connection.query("SELECT * FROM role", function(err, res) {
