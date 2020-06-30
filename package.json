@@ -1,0 +1,24 @@
+{
+  "name": "homework-12",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hoffman1200/Homework-12.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hoffman1200/Homework-12/issues"
+  },
+  "homepage": "https://github.com/hoffman1200/Homework-12#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^7.2.0",
+    "mysql": "^2.18.1"
+  }
+}
