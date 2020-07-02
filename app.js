@@ -5,6 +5,7 @@ const figlet = require('figlet');
 let roles;
 let departments;
 let managers;
+let employees;
 
 var connection = mysql.createConnection({
     host: "localhost",
@@ -24,13 +25,13 @@ var connection = mysql.createConnection({
     console.log(err || result);
   });
 
-  
   connection.connect(function(err) {
     if (err) throw err;
     start();
     getDepartments();
     getRoles();
     getManagers();
+    getEmployees();
   });
 
   start = () => {
@@ -45,11 +46,13 @@ var connection = mysql.createConnection({
       .then(function(answer) {
         if (answer.choices === "ADD") {
           addSomething();
-          console.log(answer.choices);
         }
         else if (answer.choices === "VIEW") {
           viewSomething();
         } 
+        else if (answer.choices === "UPDATE") {
+          updateSomething();
+        }
         else if (answer.choices === "EXIT") {
           console.log("Bye!!!");
           connection.end();
@@ -83,6 +86,15 @@ getManagers = () => {
     // console.table(managers);
   })
 };
+
+getEmployees = () => {
+  connection.query("SELECT id, CONCAT_WS(' ', first_name, last_name) AS Employee_Name FROM employee", function(err, res) {
+    if (err) throw err;
+    employees = res;
+    // console.table(employees);
+  })
+
+}
 
 addSomething = () => {
   inquirer.prompt([
@@ -244,7 +256,6 @@ addEmployee = () => {
       }
     }
 
-
     connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('${answer.first_name}', '${answer.last_name}', ${role_id}, ${manager_id})`, function(err, res) {
       if (err) throw err;
 
@@ -274,7 +285,7 @@ viewSomething = () => {
       viewEmployees();
     }
     else if (answer.viewChoice === "EXIT") {
-      console.log("Bye!!!");
+      console.log("Thanks for using FSC Employee Tracker!!!");
       connection.end();
     }
   })
@@ -289,7 +300,7 @@ viewDepartments = () => {
 };
 
 viewRoles = () => {
-  connection.query("SELECT * FROM role", function(err, res) {
+  connection.query("SELECT  r.id, r.title, r.salary, d.name as Department_Name FROM role AS r INNER JOIN department AS d ON r.department_id = d.id", function(err, res) {
     if (err) throw err;
     console.table(res);
     start();
@@ -297,10 +308,86 @@ viewRoles = () => {
 };
 
 viewEmployees = () => {
-  connection.query("SELECT * FROM employee", function(err, res) {
+  connection.query('SELECT e.id, e.first_name, e.last_name, d.name AS department, r.title, r.salary, CONCAT_WS(" ", m.first_name, m.last_name) AS manager FROM employee e LEFT JOIN employee m ON m.id = e.manager_id INNER JOIN role r ON e.role_id = r.id INNER JOIN department d ON r.department_id = d.id ORDER BY e.id ASC', function(err, res) {
     if (err) throw err;
     console.table(res);
     start();
   });
+};
+
+updateSomething = () => {
+  inquirer.prompt([
+    {
+      name: "update",
+      type: "list",
+      message: "Choose something to update:",
+      choices: ["Update employee roles", "Update employee managers"]
+    }
+  ]).then(answer => {
+    // console.log(answer);
+    if (answer.update === "Update employee roles") {
+      updateEmployeeRole();
+    }
+  })
+};
+
+updateEmployeeRole = () => {
+  let employeeOptions = [];
+  let roleChioces = [];
+
+  for (var i = 0; i < employees.length; i++) {
+    employeeOptions.push(Object(employees[i]));
+  }
+  inquirer.prompt([
+    {
+      name: "updateRole",
+      type: "list",
+      message: "Which employee's role do you want to update?",
+      choices: function () {
+        var choiceArray = [];
+        for (var i = 0; i < employeeOptions.length; i++) {
+          choiceArray.push(employeeOptions[i].Employee_Name);
+        }
+        return choiceArray;
+      }
+    }
+  ]).then(answer => {
+    let roleOptions = [];
+    for (i = 0; i < roles.length; i++) {
+      roleOptions.push(Object(roles[i]));
+      // console.log(roleOptions[i].title);
+    };
+    console.log(answer.updateRole);
+    for (i = 0; i < employeeOptions.length; i++) {
+      if (employeeOptions[i].Employee_Name === answer.updateRole) {
+        employeeSelected = employeeOptions[i].id
+      }
+    }
+    inquirer.prompt([
+      {
+        name: "newRole",
+        type: "list",
+        message: "Select a new role:",
+        choices: function() {
+          var choiceArray = [];
+          for (var i = 0; i < roleOptions.length; i++) {
+            choiceArray.push(roleOptions[i].title)
+          }
+          return choiceArray;
+        }
+      }
+    ]).then(answer => {
+console.log(answer.newRole);
+console.log(roleOptions);
+for (i = 0; i < roleOptions.length; i++) {
+  if (answer.newRole === roleOptions[i].title) {
+    newChoice = roleOptions[i].id
+    console.log(newChoice);
+    console.log(employeeSelected);
+    connection.query(`UPDATE employee SET role_id = ${newChoice} WHERE id = ${employeeSelected}`);
+  }
+}
+    })
+  })
 };
   
