@@ -57,7 +57,10 @@ var connection = mysql.createConnection({
           deleteSomething();
         }
         else if (answer.choices === "EXIT") {
-          console.log("Thanks for using FSC Employee Tracker!!!");
+          figlet('Thanks for using FSC Employee Tracker', (err, result) => {
+            console.log(err || result);
+          });
+        
           connection.end();
         }
         else{
@@ -120,7 +123,10 @@ addSomething = () => {
       addEmployee();
     } 
     else if (answer.add === "EXIT") {
-      console.log("Thanks for using FSC Employee Tracker!!!");
+      figlet('Thanks for using FSC Employee Tracker', (err, result) => {
+        console.log(err || result);
+      });
+
       connection.end();
     } else {
       connection.end();
@@ -185,6 +191,8 @@ addRole = () => {
 };
 
 addEmployee = () => {
+  getRoles();
+  getManagers();
   let roleOptions = [];
   for (i = 0; i < roles.length; i++) {
     roleOptions.push(Object(roles[i]));
@@ -207,7 +215,7 @@ addEmployee = () => {
     {
       name: "role_id",
       type: "list",
-      message: "What is the department for this possition?",
+      message: "What is the role for this employee?",
       choices: function() {
         var choiceArray = [];
         for (var i = 0; i < roleOptions.length; i++) {
@@ -270,7 +278,10 @@ viewSomething = () => {
       viewEmployees();
     }
     else if (answer.viewChoice === "EXIT") {
-      console.log("Thanks for using FSC Employee Tracker!!!");
+      figlet('Thanks for using FSC Employee Tracker', (err, result) => {
+        console.log(err || result);
+      });
+
       connection.end();
     } else {
       connection.end();
@@ -281,6 +292,10 @@ viewSomething = () => {
 viewDepartments = () => {
   connection.query("SELECT * FROM department", (err, res) => {
     if (err) throw err;
+    figlet('Departments', (err, result) => {
+      console.log(err || result);
+    });
+
     printTable(res);
     start();
   });
@@ -289,6 +304,10 @@ viewDepartments = () => {
 viewRoles = () => {
   connection.query("SELECT  r.id, r.title, r.salary, d.name as Department_Name FROM role AS r INNER JOIN department AS d ON r.department_id = d.id", (err, res) => {
     if (err) throw err;
+    figlet('Roles', (err, result) => {
+      console.log(err || result);
+    });
+
     printTable(res);
     start();
   });
@@ -297,6 +316,10 @@ viewRoles = () => {
 viewEmployees = () => {
   connection.query('SELECT e.id, e.first_name, e.last_name, d.name AS department, r.title, r.salary, CONCAT_WS(" ", m.first_name, m.last_name) AS manager FROM employee e LEFT JOIN employee m ON m.id = e.manager_id INNER JOIN role r ON e.role_id = r.id INNER JOIN department d ON r.department_id = d.id ORDER BY e.id ASC', (err, res) => {
     if (err) throw err;
+    figlet('Employees', (err, result) => {
+      console.log(err || result);
+    });
+  
     printTable(res);
     start();
   });
@@ -318,6 +341,10 @@ updateSomething = () => {
       updateEmployeeManager();
     }
     else if(answer.update === "EXIT") {
+      figlet('Thanks for using FSC Employee Tracker', (err, result) => {
+        console.log(err || result);
+      });
+
       connection.end();
     } else {
       connection.end();
@@ -464,7 +491,9 @@ deleteSomething = () => {
     else if (answer.delete === "Delete employee") {
       deleteEmployee();
     } else if(answer.delete === "EXIT") {
-      console.log("Thanks for using FSC Employee Tracker!!!");
+      figlet('Thanks for using FSC Employee Tracker', (err, result) => {
+        console.log(err || result);
+      });
 
       connection.end();
     }
@@ -497,7 +526,6 @@ deleteDepartment = () => {
     for (i = 0; i < departmentOptions.length; i++) {
       if (answer.deleteDepartment === departmentOptions[i].name) {
         newChoice = departmentOptions[i].id
-        console.log(newChoice);
         connection.query(`DELETE FROM department Where id = ${newChoice}`), (err, res) => {
           if (err) throw err;
         };
@@ -532,7 +560,6 @@ deleteRole = () => {
     for (i = 0; i < roleOptions.length; i++) {
       if (answer.deleteRole === roleOptions[i].title) {
         newChoice = roleOptions[i].id
-        console.log(newChoice);
         connection.query(`DELETE FROM role Where id = ${newChoice}`), (err, res) => {
           if (err) throw err;
         };
@@ -577,3 +604,5 @@ deleteEmployee = () => {
     start();
   })
 };
+
+// @hoffman1200 Fernando Soto 
