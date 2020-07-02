@@ -1,6 +1,6 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
-const cTable = require('console.table');
+const { printTable } = require('console-table-printer');
 const figlet = require('figlet');
 let roles;
 let departments;
@@ -21,7 +21,7 @@ var connection = mysql.createConnection({
     database: "employees_db"
   });
 
-  figlet('Employee Tracker', (err, result) => {
+  figlet('FSC Employee Tracker', (err, result) => {
     console.log(err || result);
   });
 
@@ -54,7 +54,7 @@ var connection = mysql.createConnection({
           updateSomething();
         }
         else if (answer.choices === "EXIT") {
-          console.log("Bye!!!");
+          console.log("Thanks for using FSC Employee Tracker!!!");
           connection.end();
         }
         else{
@@ -93,8 +93,7 @@ getEmployees = () => {
     employees = res;
     // console.table(employees);
   })
-
-}
+};
 
 addSomething = () => {
   inquirer.prompt([
@@ -118,7 +117,7 @@ addSomething = () => {
       addEmployee();
     } 
     else if (answer.add === "EXIT") {
-      console.log("Bye");
+      console.log("Thanks for using FSC Employee Tracker!!!");
       connection.end();
     } else {
       connection.end();
@@ -137,6 +136,7 @@ addDepartment = () => {
     connection.query(`INSERT INTO department (name) VALUES ('${answer.department}')`, function(err, res) {
       if (err) throw err;
       console.log("1 new department added: " + answer.department);
+      getDepartments();
       start();
     }) 
   })
@@ -147,8 +147,6 @@ addRole = () => {
   for (i = 0; i < departments.length; i++) {
     departmentOptions.push(Object(departments[i]));
   };
-  // console.log(departmentOptions[1].name);
-  // console.log(departmentOptions[1].id);
 
   inquirer.prompt([
     {
@@ -168,41 +166,30 @@ addRole = () => {
       choices: departmentOptions
     },
   ]).then(function(answer) {
-    // console.log(departmentOptions);
-    // console.log(answer.department_id);
     for (i = 0; i < departmentOptions.length; i++) {
-      // console.log(departmentOptions[i].id);
       if (departmentOptions[i].name === answer.department_id) {
-        // console.log(departmentOptions[i].id)
         department_id = departmentOptions[i].id
       }
     }
-
-
     connection.query(`INSERT INTO role (title, salary, department_id) VALUES ('${answer.title}', '${answer.salary}', ${department_id})`, function(err, res) {
       if (err) throw err;
 
       console.log("1 new role added: " + answer.title);
+      getRoles();
       start();
     }) 
   })
 };
 
-
 addEmployee = () => {
   let roleOptions = [];
   for (i = 0; i < roles.length; i++) {
     roleOptions.push(Object(roles[i]));
-    // console.log(roleOptions[i].title);
   };
   let managerOptions = [];
   for (i = 0; i < managers.length; i++) {
     managerOptions.push(Object(managers[i]));
-    // console.log(managerOptions[i].managers);
   }
-  // console.log(departmentOptions[1].name);
-  // console.log(departmentOptions[1].id);
-  // console.log(roleOptions)
   inquirer.prompt([
     {
       name: "first_name",
@@ -239,14 +226,9 @@ addEmployee = () => {
       }
     }
   ]).then(function(answer) {
-    // console.log(answer.role_id);
-    // console.log(roleOptions);
     for (i = 0; i < roleOptions.length; i++) {
-      // console.log(departmentOptions[i].id);
       if (roleOptions[i].title === answer.role_id) {
-        // console.log(roleOptions[i].id)
         role_id = roleOptions[i].id
-        // console.log(role_id);
       }
     }
 
@@ -260,6 +242,7 @@ addEmployee = () => {
       if (err) throw err;
 
       console.log("1 new employee added: " + answer.first_name + " " + answer.last_name);
+      getEmployees();
       start()
     }) 
   })
@@ -274,7 +257,6 @@ viewSomething = () => {
       choices: ["DEPARTMENTS", "ROLES", "EMPLOYEES", "EXIT"]
     }
   ]).then(answer => {
-    console.log(answer.viewChoice);
     if (answer.viewChoice === "DEPARTMENTS") {
       viewDepartments();
     }
@@ -287,6 +269,8 @@ viewSomething = () => {
     else if (answer.viewChoice === "EXIT") {
       console.log("Thanks for using FSC Employee Tracker!!!");
       connection.end();
+    } else {
+      connection.end();
     }
   })
 };
@@ -294,7 +278,7 @@ viewSomething = () => {
 viewDepartments = () => {
   connection.query("SELECT * FROM department", function(err, res) {
     if (err) throw err;
-    console.table(res);
+    printTable(res);
     start();
   });
 };
@@ -302,7 +286,7 @@ viewDepartments = () => {
 viewRoles = () => {
   connection.query("SELECT  r.id, r.title, r.salary, d.name as Department_Name FROM role AS r INNER JOIN department AS d ON r.department_id = d.id", function(err, res) {
     if (err) throw err;
-    console.table(res);
+    printTable(res);
     start();
   });
 };
@@ -310,7 +294,7 @@ viewRoles = () => {
 viewEmployees = () => {
   connection.query('SELECT e.id, e.first_name, e.last_name, d.name AS department, r.title, r.salary, CONCAT_WS(" ", m.first_name, m.last_name) AS manager FROM employee e LEFT JOIN employee m ON m.id = e.manager_id INNER JOIN role r ON e.role_id = r.id INNER JOIN department d ON r.department_id = d.id ORDER BY e.id ASC', function(err, res) {
     if (err) throw err;
-    console.table(res);
+    printTable(res);
     start();
   });
 };
@@ -321,19 +305,25 @@ updateSomething = () => {
       name: "update",
       type: "list",
       message: "Choose something to update:",
-      choices: ["Update employee roles", "Update employee managers"]
+      choices: ["Update employee roles", "Update employee managers", "EXIT"]
     }
   ]).then(answer => {
-    // console.log(answer);
     if (answer.update === "Update employee roles") {
       updateEmployeeRole();
+    }
+    else if (answer.update === "Update employee managers") {
+      updateEmployeeManager();
+    }
+    else if(answer.update === "EXIT") {
+      connection.end();
+    } else {
+      connection.end();
     }
   })
 };
 
 updateEmployeeRole = () => {
   let employeeOptions = [];
-  let roleChioces = [];
 
   for (var i = 0; i < employees.length; i++) {
     employeeOptions.push(Object(employees[i]));
@@ -355,9 +345,7 @@ updateEmployeeRole = () => {
     let roleOptions = [];
     for (i = 0; i < roles.length; i++) {
       roleOptions.push(Object(roles[i]));
-      // console.log(roleOptions[i].title);
     };
-    console.log(answer.updateRole);
     for (i = 0; i < employeeOptions.length; i++) {
       if (employeeOptions[i].Employee_Name === answer.updateRole) {
         employeeSelected = employeeOptions[i].id
@@ -377,17 +365,78 @@ updateEmployeeRole = () => {
         }
       }
     ]).then(answer => {
-console.log(answer.newRole);
-console.log(roleOptions);
 for (i = 0; i < roleOptions.length; i++) {
   if (answer.newRole === roleOptions[i].title) {
     newChoice = roleOptions[i].id
-    console.log(newChoice);
-    console.log(employeeSelected);
-    connection.query(`UPDATE employee SET role_id = ${newChoice} WHERE id = ${employeeSelected}`);
+    connection.query(`UPDATE employee SET role_id = ${newChoice} WHERE id = ${employeeSelected}`), function(err, res) {
+      if (err) throw err;
+    };
   }
 }
+console.log("Role updated succesfully");
+getEmployees();
+getRoles();
+start();
     })
   })
 };
   
+
+updateEmployeeManager = () => {
+  let employeeOptions = [];
+
+  for (var i = 0; i < employees.length; i++) {
+    employeeOptions.push(Object(employees[i]));
+  }
+  inquirer.prompt([
+    {
+      name: "updateManager",
+      type: "list",
+      message: "Which employee's manager do you want to update?",
+      choices: function () {
+        var choiceArray = [];
+        for (var i = 0; i < employeeOptions.length; i++) {
+          choiceArray.push(employeeOptions[i].Employee_Name);
+        }
+        return choiceArray;
+      }
+    }
+  ]).then(answer => {
+    let managerOptions = [];
+    for (i = 0; i < managers.length; i++) {
+      managerOptions.push(Object(managers[i]));
+    };
+    for (i = 0; i < employeeOptions.length; i++) {
+      if (employeeOptions[i].Employee_Name === answer.updateManager) {
+        employeeSelected = employeeOptions[i].id
+      }
+    }
+    inquirer.prompt([
+      {
+        name: "newManager",
+        type: "list",
+        message: "Select a new manager:",
+        choices: function() {
+          var choiceArray = [];
+          for (var i = 0; i < managerOptions.length; i++) {
+            choiceArray.push(managerOptions[i].managers)
+          }
+          return choiceArray;
+        }
+      }
+    ]).then(answer => {
+for (i = 0; i < managerOptions.length; i++) {
+  if (answer.newManager === managerOptions[i].managers) {
+    newChoice = managerOptions[i].id
+    connection.query(`UPDATE employee SET manager_id = ${newChoice} WHERE id = ${employeeSelected}`), (err, res) => {
+      if (err) throw err;
+    };
+    console.log("Manager Updated Succesfully");
+  }
+}
+getEmployees();
+getManagers();
+start();
+    })
+  })
+};
