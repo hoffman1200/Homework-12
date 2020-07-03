@@ -14,8 +14,8 @@ Developers are often tasked with creating interfaces that make it easy for non-d
 
 ### App Screen Shots
 
-![Foto1](foto1.png)   
-![Foto2](foto2.png)
+![Foto1](Foto1.png)   
+![Foto2](Foto2.png)
 
 ## Table of contents
 
