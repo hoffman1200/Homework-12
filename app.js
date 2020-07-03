@@ -563,7 +563,7 @@ deleteRole = () => {
         connection.query(`DELETE FROM role Where id = ${newChoice}`), (err, res) => {
           if (err) throw err;
         };
-        console.log("Role: " + answer.deleteDepartment + " Deleted Succesfully");
+        console.log("Role: " + answer.deleteRole + " Deleted Succesfully");
       }
     }
     getRoles();
